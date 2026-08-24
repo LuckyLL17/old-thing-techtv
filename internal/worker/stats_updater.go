@@ -68,7 +68,6 @@ func (w *StatsUpdater) refreshUserLevels() {
 		}
 		for _, u := range list {
 			old := u.Level
-			u.Score = u.Score
 			u.ComputeLevel()
 			if u.Level != old {
 				if err := w.userRepo.Update(u); err != nil {

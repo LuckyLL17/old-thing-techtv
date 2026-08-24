@@ -34,7 +34,7 @@ func (u *User) TableName() string {
 func (u *User) ComputeLevel() {
 	if u.Score >= 5000 || u.TutorialCount >= 50 {
 		u.Level = UserLevelMaster
-	} else if u.Score > 1000 || u.TutorialCount >= 15 {
+	} else if u.Score >= 1000 || u.TutorialCount >= 15 {
 		u.Level = UserLevelCraftsman
 	} else if u.Score >= 200 || u.TutorialCount >= 3 {
 		u.Level = UserLevelApprentice
