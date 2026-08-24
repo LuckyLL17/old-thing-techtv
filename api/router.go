@@ -180,8 +180,29 @@ func UploadHandler(cfg *config.UploadConfig) gin.HandlerFunc {
 			c.JSON(500, gin.H{"code": 50003, "message": err.Error(), "success": false})
 			return
 		}
-		thumb, _ := utils.GenerateThumbnail(path, 300)
-		_ = utils.ResizeImage(path, path, cfg.ImageMax, cfg.ImageMax)
+		// From here on we own a real file on disk. If any later step fails, remove
+		// it so a bad/malformed image never leaves an orphaned upload (or a
+		// half-resized one) behind. GenerateThumbnail and ResizeImage both write
+		// via temp+rename, so on failure they leave no partial output themselves.
+		cleanup := func() { _ = utils.RemoveFile(path) }
+		thumb, thumbErr := utils.GenerateThumbnail(path, 300)
+		if thumbErr != nil {
+			// Thumbnail is non-fatal: the upload is still valid, but log it so the
+			// failure isn't silently swallowed (the old code used `thumb, _ :=`).
+			logger.Warnf("generate thumbnail: %v", thumbErr)
+		}
+		if err := utils.ResizeImage(path, path, cfg.ImageMax, cfg.ImageMax); err != nil {
+			// A failure here means the uploaded file is not a usable image (bad
+			// decode, unsupported format, etc.). Remove it rather than serving a
+			// raw/malicious blob through /uploads, then also remove any thumbnail.
+			logger.Errorf("resize upload: %v", err)
+			cleanup()
+			if thumb != "" {
+				_ = utils.RemoveFile(thumb)
+			}
+			c.JSON(400, gin.H{"code": 40004, "message": "图片处理失败", "success": false})
+			return
+		}
 		c.JSON(200, gin.H{
 			"code": 0, "message": "ok", "success": true,
 			"data": gin.H{"path": "/uploads/" + basename(path), "thumb": "/uploads/" + basename(thumb), "size": file.Size},
