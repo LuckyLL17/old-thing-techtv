@@ -155,7 +155,7 @@ func (r *NotificationRepo) MarkRead(uid, id uint64) error {
 func (r *NotificationRepo) MarkAllRead(uid uint64) (int64, error) {
 	now := time.Now()
 	res := r.db.Model(&domain.Notification{}).
-		Where("`read` = ?", false).
+		Where("user_id = ? AND `read` = ?", uid, false).
 		Updates(map[string]any{"`read`": true, "read_at": &now})
 	if res.Error != nil {
 		return 0, apperr.Wrap(apperr.CodeDB, "标记全部已读失败", res.Error)

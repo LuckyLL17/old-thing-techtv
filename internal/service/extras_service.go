@@ -28,7 +28,7 @@ func (s *NotificationService) MarkRead(uid, id uint64) error {
 }
 
 func (s *NotificationService) MarkAllRead(uid uint64) (int64, error) {
-	return s.repo.MarkAllRead(0)
+	return s.repo.MarkAllRead(uid)
 }
 
 func (s *NotificationService) ClearOld(uid uint64, days int) (int64, error) {
