@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"time"
+
 	"upcycle-hub/internal/domain"
 
 	"gorm.io/gorm"
@@ -76,10 +78,16 @@ func (r *MessageRepo) List(userID, otherID uint64, page, size int) ([]*domain.Me
 	return list, err
 }
 
+// MarkRead 将 otherID 发给 userID 且尚未阅读的消息标记为已读。
+// 注意方向：进入会话的用户是 userID，要标记的是“对方发给我”的消息，
+// 即 sender_id = otherID、receiver_id = userID。此前条件被写反，
+// 导致 UnreadCount(receiver_id=userID) 统计的未读消息永远命中不到，
+// 红点在进入会话及刷新后都不消失。
 func (r *MessageRepo) MarkRead(userID, otherID uint64) error {
+	now := time.Now()
 	return r.db.Model(&domain.Message{}).
-		Where("sender_id = ? AND receiver_id = ? AND is_read = ?", userID, otherID, false).
-		Updates(map[string]interface{}{"is_read": true}).Error
+		Where("sender_id = ? AND receiver_id = ? AND is_read = ?", otherID, userID, false).
+		Updates(map[string]interface{}{"is_read": true, "read_at": &now}).Error
 }
 
 func (r *MessageRepo) UnreadCount(userID uint64) (int64, error) {

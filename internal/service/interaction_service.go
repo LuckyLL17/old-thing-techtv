@@ -3,6 +3,9 @@ package service
 import (
 	"upcycle-hub/internal/domain"
 	"upcycle-hub/internal/repository"
+	"upcycle-hub/pkg/logger"
+
+	"go.uber.org/zap"
 )
 
 type InteractionService struct {
@@ -128,8 +131,12 @@ func (s *InteractionService) SendMessage(senderID, receiverID uint64, content st
 }
 
 func (s *InteractionService) ListMessages(userID, otherID uint64, page, size int) ([]*domain.Message, error) {
+	// 进入会话即把对方发给我的未读消息标记为已读。标已读失败不阻断消息展示：
+	// 该错误属于副作用写库失败而非读取失败，若直接返回会让用户既看不到消息、红点也不消。
+	// 降级为告警日志，仍继续返回消息列表，让“读消息”与“标已读”解耦。
 	if err := s.messageRepo.MarkRead(userID, otherID); err != nil {
-		return nil, err
+		logger.Warn("mark messages read failed",
+			zap.Uint64("user_id", userID), zap.Uint64("other_id", otherID), zap.Error(err))
 	}
 	return s.messageRepo.List(userID, otherID, page, size)
 }
