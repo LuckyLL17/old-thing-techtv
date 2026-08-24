@@ -85,7 +85,7 @@ func (r *MessageRepo) MarkRead(userID, otherID uint64) error {
 func (r *MessageRepo) UnreadCount(userID uint64) (int64, error) {
 	var n int64
 	err := r.db.Model(&domain.Message{}).
-		Where("sender_id = ? AND is_read = ?", userID, false).Count(&n).Error
+		Where("receiver_id = ? AND is_read = ?", userID, false).Count(&n).Error
 	return n, err
 }
 
