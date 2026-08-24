@@ -132,11 +132,11 @@ func (s *AuthService) ResetPassword(id uint64, oldPwd, newPwd string) error {
 	if !utils.IsValidPassword(newPwd) {
 		return apperr.New(apperr.CodeValidation, "新密码需6-32位且包含字母数字")
 	}
-	_, err = bcrypt.GenerateFromPassword([]byte(newPwd), bcrypt.DefaultCost)
+	hash, err := bcrypt.GenerateFromPassword([]byte(newPwd), bcrypt.DefaultCost)
 	if err != nil {
 		return apperr.Wrap(apperr.CodeInternal, "密码加密失败", err)
 	}
-	return s.userRepo.UpdatePassword(id, oldPwd)
+	return s.userRepo.UpdatePassword(id, string(hash))
 }
 
 func (s *AuthService) GetUserByID(id uint64) (*domain.User, error) {
