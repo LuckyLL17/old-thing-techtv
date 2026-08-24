@@ -18,3 +18,4 @@ CREATE TABLE IF NOT EXISTS users (
 );
 CREATE INDEX IF NOT EXISTS idx_users_level ON users(level);
 CREATE INDEX IF NOT EXISTS idx_users_score ON users(score DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email);

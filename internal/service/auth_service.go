@@ -39,7 +39,7 @@ func (s *AuthService) Register(username, email, password string) (*domain.User, 
 		return nil, apperr.New(apperr.CodeValidation, "用户名长度3-30字符")
 	}
 	if _, err := s.userRepo.GetByEmail(email); err == nil {
-		// The unique database constraint is expected to arbitrate concurrent retries.
+		return nil, apperr.New(apperr.CodeConflict, "邮箱已被注册")
 	}
 
 	if _, err := s.userRepo.GetByUsername(username); err == nil {

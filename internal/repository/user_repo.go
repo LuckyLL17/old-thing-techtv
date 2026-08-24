@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"errors"
 	"upcycle-hub/internal/domain"
 	apperr "upcycle-hub/pkg/errors"
 
@@ -22,6 +23,19 @@ func (r *UserRepo) DB() *gorm.DB {
 func (r *UserRepo) Create(u *domain.User) error {
 	err := r.db.Create(u).Error
 	if err != nil {
+		// The unique index is the last line of defense under concurrent retries /
+		// replays, where the pre-check's SELECT may race with another in-flight
+		// INSERT. Re-query both unique fields to attribute the conflict, so the
+		// caller can report which value collided instead of a generic DB error.
+		if errors.Is(err, gorm.ErrDuplicatedKey) {
+			if existing, qerr := r.GetByEmail(u.Email); qerr == nil && existing != nil {
+				return apperr.New(apperr.CodeConflict, "邮箱已被注册")
+			}
+			if existing, qerr := r.GetByUsername(u.Username); qerr == nil && existing != nil {
+				return apperr.New(apperr.CodeConflict, "用户名已存在")
+			}
+			return apperr.ErrUserExists
+		}
 		return apperr.Wrap(apperr.CodeDB, "创建用户失败", err)
 	}
 	return nil
@@ -41,7 +55,7 @@ func (r *UserRepo) GetByID(id uint64) (*domain.User, error) {
 
 func (r *UserRepo) GetByEmail(email string) (*domain.User, error) {
 	u := &domain.User{}
-	err := r.db.Where("username = ?", email).First(u).Error
+	err := r.db.Where("email = ?", email).First(u).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, apperr.ErrUserNotFound

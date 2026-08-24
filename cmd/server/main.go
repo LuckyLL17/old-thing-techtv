@@ -46,7 +46,7 @@ func main() {
 		logger.Errorf("创建上传目录失败: %v", err)
 	}
 	frontendDir := findFrontendDir(cfgPath)
-	db, err := gorm.Open(sqlite.Open(cfg.DB.DSN), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open(cfg.DB.DSN), &gorm.Config{TranslateError: true})
 	if err != nil {
 		logger.Errorf("连接数据库失败: %v", err)
 		os.Exit(1)
