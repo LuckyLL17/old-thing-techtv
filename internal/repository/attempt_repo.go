@@ -49,7 +49,12 @@ func (r *AttemptRepo) ListByUser(userID uint64, page, size int) ([]*domain.Attem
 	q := r.db.Model(&domain.Attempt{}).Where("user_id = ?", userID)
 	q.Count(&total)
 	if size > 0 {
-		q = q.Offset(page * size).Limit(size)
+		// page 是从 1 开始的页码，与其它列表查询保持一致的 (page-1)*size 偏移，
+		// 避免 page*size 把首页整体向后推移、造成页间边界重叠与总数对不上。
+		if page < 1 {
+			page = 1
+		}
+		q = q.Offset((page - 1) * size).Limit(size)
 	}
 	err := q.Order("id DESC").Find(&list).Error
 	if err != nil {
