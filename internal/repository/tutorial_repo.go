@@ -86,7 +86,9 @@ func (r *TutorialRepo) List(page, size int, catID uint64, diff, status, sort, ke
 	orderExpr := "id DESC"
 	switch sort {
 	case "popular":
-		orderExpr = "view_count DESC, favorite_count DESC"
+		// 业务热度以收藏量为主、浏览量为辅，与 TopTutorials 及 tutorial_popularity 索引保持一致，
+		// 避免"高浏览低收藏"的内容把"高收藏"的热门教程挤到后面。
+		orderExpr = "favorite_count DESC, view_count DESC"
 	case "attempted":
 		orderExpr = "attempt_count DESC"
 	case "views":
