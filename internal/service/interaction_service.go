@@ -77,7 +77,7 @@ func (s *InteractionService) ToggleFavorite(userID uint64, targetType string, ta
 	if ok {
 		err = s.favoriteRepo.Delete(userID, targetType, targetID)
 		if err == nil && targetType == domain.FavTypeTutorial {
-			s.tutorialRepo.IncCounts(targetID, 1, 0, 0, 0)
+			s.tutorialRepo.IncCounts(targetID, -1, 0, 0, 0)
 		}
 		return false, err
 	}

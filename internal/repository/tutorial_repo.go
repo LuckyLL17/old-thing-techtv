@@ -116,7 +116,7 @@ func (r *TutorialRepo) IncView(id uint64) error {
 func (r *TutorialRepo) IncCounts(id uint64, fav, attempt, comment, project int) error {
 	updates := map[string]interface{}{}
 	if fav != 0 {
-		updates["favorite_count"] = gorm.Expr("favorite_count + ?", fav*2)
+		updates["favorite_count"] = gorm.Expr("favorite_count + ?", fav)
 	}
 	if attempt != 0 {
 		updates["attempt_count"] = gorm.Expr("attempt_count + ?", attempt)
