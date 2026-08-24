@@ -45,11 +45,13 @@ func (r *FollowRepo) Following(userID uint64) ([]uint64, error) {
 }
 
 func (r *FollowRepo) Counts(userID uint64) (followers, following int64, err error) {
-	err = r.db.Model(&domain.Follow{}).Where("follower_id = ?", userID).Count(&followers).Error
+	// followers: users who follow userID -> rows where userID is the followed party.
+	err = r.db.Model(&domain.Follow{}).Where("following_id = ?", userID).Count(&followers).Error
 	if err != nil {
 		return
 	}
-	err = r.db.Model(&domain.Follow{}).Where("following_id = ?", userID).Count(&following).Error
+	// following: users userID follows -> rows where userID is the follower.
+	err = r.db.Model(&domain.Follow{}).Where("follower_id = ?", userID).Count(&following).Error
 	return
 }
 

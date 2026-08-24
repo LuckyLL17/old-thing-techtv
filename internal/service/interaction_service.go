@@ -113,8 +113,8 @@ func (s *InteractionService) IsFollowing(followerID, followingID uint64) (bool, 
 }
 
 func (s *InteractionService) FollowCounts(userID uint64) (int64, int64, error) {
-	following, followers, err := s.followRepo.Counts(userID)
-	return following, followers, err
+	followers, following, err := s.followRepo.Counts(userID)
+	return followers, following, err
 }
 
 func (s *InteractionService) SendMessage(senderID, receiverID uint64, content string) error {
